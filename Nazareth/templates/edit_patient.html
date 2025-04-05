@@ -1,0 +1,108 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Patient</title>
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    <link rel="stylesheet" href="{% static 'css/edit_patient.css' %}">
+</head>
+<body>
+<main>
+    <div class="register-container">
+        <h1>Edit Patient</h1>
+
+
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <p class="alert {{ message.tags }}">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if patient.id %}
+        <form id="editForm" method="post" action="{% url 'patient_edit' id=patient.id %}">
+            {% csrf_token %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Queue Number</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Gender</th>
+                        <th>Department</th>
+                        <th>Priority</th>
+                        <th>Phone Number</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ patient.queue_number }}</td>
+                        <td>
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="name" value="{{ patient.name }}" required>
+                        </td>
+                        <td>
+                            <label for="age">Age</label>
+                            <input type="number" id="age" name="age" value="{{ patient.age }}" required>
+                        </td>
+                        <td>
+                            <label for="gender">Gender</label>
+                            <select id="gender" name="gender" required>
+                                <option value="Male" {% if patient.gender == "Male" %}selected{% endif %}>Male</option>
+                                <option value="Female" {% if patient.gender == "Female" %}selected{% endif %}>Female</option>
+                                <option value="Other" {% if patient.gender == "Other" %}selected{% endif %}>Other</option>
+                            </select>
+                        </td>
+                        <td>
+                            <label for="department">Department</label>
+                            <select id="department" name="department" required>
+                                {% for department in departments %}
+                                    <option value="{{ department.name }}" {% if patient.department.name == department.name %}selected{% endif %}>
+                                        {{ department.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            <label for="priority">Priority</label>
+                            <select id="priority" name="priority" required>
+                                {% for priority in priorities %}
+                                <option value="{{ priority }}" {% if patient.priority == priority %}selected{% endif %}>
+                                    {{ priority }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            <label for="phone_number">Phone Number</label>
+                            <input type="text" id="phone_number" name="phone_number" value="{{ patient.phone_number }}" required>
+                        </td>
+                        <td>
+                            <label for="status">Status</label>
+                            <select id="status" name="status" required>
+                                {% for status in statuses %}
+                                    <option value="{{ status }}" {% if patient.status == status %}selected{% endif %}>
+                                        {{ status }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="submit" class="btn">Save</button>
+            <button type="button" class="btn btn-secondary" onclick="window.history.back();">Cancel</button>
+        </form>
+        {% else %}
+        <div class="messages">
+            <p class="alert alert-danger">Invalid Patient: Data does not exist.</p>
+        </div>
+        {% endif %}
+    </div>
+</main>
+</body>
+</html>

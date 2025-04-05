@@ -1,0 +1,93 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    <title>Appointments - Nazareth Hospital</title>
+    <link rel="stylesheet" href="{% static 'css/appointments.css' %}">
+</head>
+<body>
+    <header class="header">
+        <a href="#" class="logo">Nazareth Hospital</a>
+        <nav class="navbar">
+            <a href="{% url 'patient_list' %}">Patients</a>
+            <a href="{% url 'health_records' %}">Health Records</a>
+            <a href="{% url 'reports' %}">Reports</a>
+            <a href="{% url 'contact' %}">Contact</a>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Appointments Overview</h1>
+
+        <div class="search-container">
+            <input type="text" id="search" placeholder="Search by Patient Name or Appointment ID...">
+        </div>
+
+
+        <section class="appointments-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Appointment ID</th>
+                        <th>Patient Name</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <td>2001</td>
+                        <td>Jane Doe</td>
+                        <td>2025-03-10</td>
+                        <td>10:00 AM</td>
+                        <td>Scheduled</td>
+                        <td>
+                            <button class="reschedule-btn">Reschedule</button>
+                            <button class="cancel-btn">Cancel</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2002</td>
+                        <td>John Smith</td>
+                        <td>2025-03-11</td>
+                        <td>2:00 PM</td>
+                        <td>Completed</td>
+                        <td>
+                            <button class="view-btn">View Details</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="add-appointment">
+            <h2>Schedule New Appointment</h2>
+            <form>
+                <label for="patient-name">Patient Name:</label>
+                <input type="text" id="patient-name" name="patient-name" required>
+
+                <label for="appointment-date">Date:</label>
+                <input type="date" id="appointment-date" name="appointment-date" required>
+
+                <label for="appointment-time">Time:</label>
+                <input type="time" id="appointment-time" name="appointment-time" required>
+
+                <button type="submit">Add Appointment</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Nazareth Hospital. All rights reserved.</p>
+    </footer>
+
+
+
+</body>
+</html>

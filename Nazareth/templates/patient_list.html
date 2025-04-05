@@ -1,0 +1,149 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/patient-list.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    <title>Patient List</title>
+    <style>
+
+        .navbar {
+            background: linear-gradient(blue, deepskyblue);
+            padding: 15px;
+            color: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .navbar a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+        .navbar a.active {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        #search-bar {
+            margin: 20px 0;
+            padding: 10px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <a href="{% url 'receptionist' %}">Dashboard</a>
+        <a href="{% url 'register_patient' %}">Register Patient</a>
+        <a href="{% url 'patient_list' %}" class="active">Patient List</a>
+    </div>
+
+
+    <div class="container">
+        <h1>Patient List</h1>
+
+
+        <input type="text" id="search-bar" placeholder="Search by name...">
+
+        {% if no_patients %}
+            <p>No patients in the list.</p>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Queue Number</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Gender</th>
+                        <th>Department</th>
+                        <th>Priority</th>
+                        <th>Phone Number</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="patient-list">
+                    {% for patient in patients %}
+                    <tr>
+                        <td>{{ patient.queue_number }}</td>
+                        <td>{{ patient.name }}</td>
+                        <td>{{ patient.age }}</td>
+                        <td>{{ patient.gender }}</td>
+                        <td>
+                            {% if patient.department %}
+                                {{ patient.department.name }}
+                            {% else %}
+                                No Department
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if patient.priority %}
+                                {{ patient.priority|capfirst }} Priority
+                            {% else %}
+                                No Priority
+                            {% endif %}
+                        </td>
+                        <td>{{ patient.phone_number }}</td>
+                        <td>
+                            {% if patient.status == 'waiting' %}
+                                <span class="badge badge-waiting">Waiting</span>
+                            {% elif patient.status == 'in_queue' %}
+                                <span class="badge badge-in-queue">In Queue</span>
+                            {% elif patient.status == 'under_observation' %}
+                                <span class="badge badge-under-observation">Under Observation</span>
+                            {% elif patient.status == 'discharged' %}
+                                <span class="badge badge-discharged">Discharged</span>
+                            {% else %}
+                                <span class="badge badge-no-queue">No Queue</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
+
+    <script>
+
+        document.getElementById('search-bar').addEventListener('input', function() {
+            let filter = this.value.toUpperCase();
+            let rows = document.querySelectorAll('#patient-list tr');
+            rows.forEach(row => {
+                let nameCell = row.cells[1];
+                row.style.display = nameCell.textContent.toUpperCase().includes(filter) ? '' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>

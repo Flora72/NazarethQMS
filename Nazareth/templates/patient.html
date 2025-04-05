@@ -1,0 +1,275 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="{% static 'css/patient.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+          integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous"/>
+    <title>Patient Dashboard</title>
+    <style>
+
+        .loading {
+            display: none;
+            font-size: 16px;
+            color: #007bff;
+        }
+
+
+        .section {
+            display: none;
+        }
+
+
+        .active-section {
+            display: block;
+        }
+
+        .section h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .btn i {
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="sidebar">
+        <ul>
+            <li>
+                <a href="#">
+                    <i class="fas fa-user-circle"></i>
+                    <div class="title">Welcome, {{ name }}</div>
+                </a>
+                  <hr class="sidebar-divider">
+                    <li>
+                        <a href="#" class="sidebar-link" data-target="appointments">
+                            <i class="fas fa-calendar-check"></i>
+                            <div class="title">My Appointments</div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-link" data-target="medications">
+                            <i class="fas fa-prescription-bottle-alt"></i>
+                            <div class="title">Medications</div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-link" data-target="lab-results">
+                            <i class="fas fa-file-medical-alt"></i>
+                            <div class="title">Lab Results</div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-link" data-target="bills">
+                            <i class="fas fa-wallet"></i>
+                            <div class="title">Bills & Payments</div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-link" data-target="profile-settings">
+                            <i class="fas fa-user-cog"></i>
+                            <div class="title">Profile Settings</div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'logout_view' %}">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <div class="title">Logout</div>
+                        </a>
+                    </li>
+        </ul>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div class="welcome-msg">
+                <h2>Hello, {{ name }}! 👋🏽</h2>
+                <p>Your current queue position is: <span
+                        id="queuePosition">{{ queue_number|default:"Loading..." }}</span></p>
+            </div>
+            <div class="user">
+                <img src="{% static 'images/patient.png' %}" alt="Patient Avatar">
+            </div>
+        </div>
+
+        <div class="cards">
+            <div class="card">
+                <div class="card-content">
+                    <div class="number">3</div>
+                    <div class="card-name">Upcoming Appointments</div>
+                </div>
+                <div class="icon-box">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-content">
+                    <div class="number">2</div>
+                    <div class="card-name">Pending Bills</div>
+                </div>
+                <div class="icon-box">
+                    <i class="fas fa-wallet"></i>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-content">
+                    <div class="number">5</div>
+                    <div class="card-name">Medications</div>
+                </div>
+                <div class="icon-box">
+                    <i class="fas fa-pills"></i>
+                </div>
+            </div>
+
+            <div class="card queue-card">
+                <div class="card-content">
+                    <div class="number" id="queuePositionCard">{{ queue_number|default:"N/A" }}</div>
+                    <div class="card-name">Your Queue Position</div>
+                </div>
+                <div class="icon-box">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-content">
+                    <div class="number">✔</div>
+                    <div class="card-name">Lab Results Available</div>
+                </div>
+                <div class="icon-box">
+                    <i class="fas fa-file-medical"></i>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="section" id="appointments">
+            <h3>My Appointments</h3>
+            <p>List of your upcoming appointments will be displayed here.</p>
+        </div>
+
+        <div class="section" id="medications">
+            <h3>Medications</h3>
+            <p>List of your medications will be displayed here.</p>
+        </div>
+
+        <div class="section" id="lab-results">
+            <h3>Lab Results</h3>
+            <p>Your lab results will be available here.</p>
+        </div>
+
+        <div class="section" id="bills">
+            <h3>Bills & Payments</h3>
+            <p>Your bill details will be shown here.</p>
+        </div>
+
+        <div class="section" id="profile-settings">
+            <h3>Profile Settings</h3>
+            <p>Edit your personal information and preferences here.</p>
+        </div>
+
+        <div class="quick-actions">
+            <h2>Quick Actions</h2>
+            <div class="buttons">
+                <a href="#" class="btn" id="bookAppointment"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
+                <a href="#" class="btn" id="contactDoctor"><i class="fas fa-envelope"></i> Contact Doctor</a>
+                <a href="#" class="btn" id="downloadReports"><i class="fas fa-download"></i> Download Records</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="loading" id="loadingIndicator">Loading queue position...</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const queuePositionElement = document.getElementById('queuePosition');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        function fetchQueuePosition() {
+            loadingIndicator.style.display = 'block';
+
+            const patientName = "{{ name }}";
+
+            fetch(`/get_queue_position/?name=${patientName}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.queue_position) {
+                        queuePositionElement.textContent = data.queue_position;
+                    } else {
+                        queuePositionElement.textContent = "N/A";
+                        console.error('Error:', data.error);
+                    }
+                })
+                .catch(error => console.error('Error fetching queue position:', error))
+                .finally(() => {
+                    loadingIndicator.style.display = 'none';
+                });
+        }
+
+        fetchQueuePosition();
+        setInterval(fetchQueuePosition, 60000);
+
+        // Sidebar link functionality
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                const targetSection = document.getElementById(link.getAttribute('data-target'));
+
+                // Hide all sections
+                const allSections = document.querySelectorAll('.section');
+                allSections.forEach(section => section.style.display = 'none');
+
+                // Show the clicked section
+                targetSection.style.display = 'block';
+            });
+        });
+
+        // Quick Action Button Events
+        document.getElementById('bookAppointment').addEventListener('click', function () {
+            alert(`Booking appointment for ${"{{ name }}"}`);
+        });
+
+        document.getElementById('contactDoctor').addEventListener('click', function () {
+            alert(`Contacting doctor for ${"{{ name }}"}`);
+        });
+
+        document.getElementById('downloadReports').addEventListener('click', function () {
+            const patientInfo = `Name: {{ name }}\nQueue Position: {{ queue_number }}\nDiagnostics: Normal`;
+            const blob = new Blob([patientInfo], {type: 'text/plain'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'patient_info.txt';
+            link.click();
+        });
+    });
+</script>
+
+</body>
+</html>

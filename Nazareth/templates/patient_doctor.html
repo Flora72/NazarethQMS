@@ -1,0 +1,238 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/patient-list.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    <title>Doctor's Patient List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 90%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333333;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #666666;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: #ffffff;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .queue-active {
+            color: green;
+            font-weight: bold;
+        }
+
+        .queue-inactive {
+            color: red;
+            font-weight: bold;
+        }
+
+        /* Buttons Styling */
+        .btn {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background-color: #28A745;
+        }
+
+        .btn-primary:hover {
+            background-color: #218838;
+        }
+
+        .btn-details {
+            background-color: #17A2B8;
+        }
+
+        .btn-details:hover {
+            background-color: #117a8b;
+        }
+
+        .btn-back {
+            margin-top: 20px;
+            background-color: #FFC107;
+        }
+
+        .btn-back:hover {
+            background-color: #e0a800;
+        }
+
+        .filter-form {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .filter-select {
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: 1px solid #cccccc;
+            width: 50%;
+            max-width: 300px;
+        }
+
+        .btn-filter {
+            background-color: #6C757D;
+        }
+
+        .btn-filter:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>Doctor's Patient List</h1>
+    <div class="filter-form">
+        <form method="GET" action="{% url 'filter_patients' %}">
+            <label for="department">Filter by Department:</label>
+            <select id="department" name="department" class="filter-select">
+                <option value="">All Departments</option>
+                {% for department in departments %}
+                    <option value="{{ department.name }}">{{ department.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-filter">Filter</button>
+        </form>
+    </div>
+
+    <button id="call-next" class="btn btn-primary" onclick="callNextPatient('{{ doctor.id }}')">Call Next Patient</button>
+
+    <a href="{% url 'doctor' %}" class="btn btn-back">Back to Dashboard</a>
+    <table>
+        <thead>
+        <tr>
+            <th>Queue Number</th>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Gender</th>
+            <th>Department</th>
+            <th>Priority</th>
+            <th>Queue Status</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for patient in patients %}
+            <tr>
+                <td>{{ patient.queue_number }}</td>
+                <td>{{ patient.name }}</td>
+                <td>{{ patient.age }}</td>
+                <td>{{ patient.gender }}</td>
+                <td>{{ patient.department }}</td>
+                <td>{{ patient.priority }}</td>
+                <td>
+                    {% if patient.in_queue %}
+                        <span class="queue-active">In Queue</span>
+                    {% else %}
+                        <span class="queue-inactive">Not in Queue</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <form method="POST" action="{% url 'notify_patient' patient.id %}">
+                        {% csrf_token %}
+                        <button class="btn btn-notify">Notify</button>
+                    </form>
+
+                    <form method="POST" action="{% url 'mark_patient_seen' patient.id %}">
+                        {% csrf_token %}
+                        <button class="btn btn-seen">Mark as Seen</button>
+                    </form>
+
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="8">No patients found.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+    <script>
+
+        function callNextPatient(doctorId) {
+
+            fetch(`/doctor/call-next/${doctorId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Next patient notified successfully: ${data.patient_name}`);
+                } else {
+                    alert(`Failed to notify next patient: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>

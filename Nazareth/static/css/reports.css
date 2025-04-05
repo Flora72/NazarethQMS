@@ -1,0 +1,102 @@
+
+body {
+    font-family: "Poppins", sans-serif;
+    background: #f4f4f9;
+    margin: 0;
+    padding: 0;
+}
+
+
+.header {
+    background-color: #0052cc;
+    padding: 20px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    margin: 0 15px;
+}
+
+.navbar a:hover {
+    text-decoration: underline;
+}
+
+main {
+    margin: 100px 20px;
+}
+
+
+.filters {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.filters h2 {
+    margin-bottom: 15px;
+}
+
+.filters label {
+    display: block;
+    margin: 10px 0 5px;
+}
+
+.filters select,
+.filters input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.filters button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #0052cc;
+    color: white;
+    cursor: pointer;
+}
+
+.filters button:hover {
+    background-color: #003d99;
+}
+
+
+.report-output {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.report-output h2 {
+    margin-bottom: 15px;
+}
+
+.report-output p {
+    color: #555;
+}
+
+
+footer {
+    background: #0052cc;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}

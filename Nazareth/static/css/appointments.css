@@ -1,0 +1,146 @@
+body {
+    font-family: "Poppins", sans-serif;
+    background: #f4f4f9;
+    margin: 0;
+    padding: 0;
+}
+
+.header {
+    background-color: #0052cc;
+    padding: 20px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    margin: 0 15px;
+}
+
+.navbar a:hover {
+    text-decoration: underline;
+}
+
+main {
+    margin: 100px 20px;
+}
+
+
+.search-container {
+    margin-bottom: 20px;
+}
+
+.search-container input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+}
+
+
+.appointments-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+}
+
+.appointments-table th,
+.appointments-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.appointments-table th {
+    background-color: #0052cc;
+    color: white;
+}
+
+.reschedule-btn, .cancel-btn, .view-btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.reschedule-btn {
+    background-color: #ffc107;
+    color: white;
+}
+
+.cancel-btn {
+    background-color: #d9534f;
+    color: white;
+}
+
+.view-btn {
+    background-color: #5cb85c;
+    color: white;
+}
+
+.reschedule-btn:hover {
+    background-color: #e0a800;
+}
+
+.cancel-btn:hover {
+    background-color: #c9302c;
+}
+
+.view-btn:hover {
+    background-color: #4cae4c;
+}
+
+.add-appointment {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.add-appointment h2 {
+    margin-bottom: 15px;
+}
+
+.add-appointment label {
+    display: block;
+    margin: 10px 0 5px;
+}
+
+.add-appointment input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.add-appointment button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #0052cc;
+    color: white;
+    cursor: pointer;
+}
+
+.add-appointment button:hover {
+    background-color: #003d99;
+}
+
+
+footer {
+    background: #0052cc;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}

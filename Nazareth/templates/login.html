@@ -1,0 +1,116 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <title>Login</title>
+</head>
+<body>
+
+ <div class="wrapper">
+     <div class="login-box">
+         <div class="login-header">
+             <span>Login</span>
+         </div>
+
+         <div class="messages" style="display: none;">
+             {% if messages %}
+                 {% for message in messages %}
+                     <div class="message {{ message.tags }}">{{ message }}</div>
+                 {% endfor %}
+             {% endif %}
+         </div>
+
+         <form method="POST" action="{% url 'login' %}">
+             {% csrf_token %}
+
+             <div class="input-box">
+                 <input type="text" id="user" class="input-field" name="username" value="{{ username|default:'' }}" required>
+                 <label for="user" class="label">Username</label>
+                 <i class="bx bx-user icon"></i>
+             </div>
+
+
+             <div class="input-box">
+                 <input type="password" id="pass" name="pass" class="input-field" required>
+                 <label for="pass" class="label">Password</label>
+                 <i class="bx bx-lock-alt icon"></i>
+             </div>
+
+
+             <div class="input-box" style="position: relative; display: flex; flex-direction: column; margin: 20px 0;">
+                 <label for="role"
+                        class="label"
+                        style="position: absolute; top: 15px; left: 20px; background: #c6c3c3; padding: 0 5px; border-radius: 20px; color: #000000; font-size: 14px; opacity: 0; transform: scale(0.9); transition: all 2s ease;">
+                     Select Role
+                 </label>
+                 <select id="role" name="role" class="input-field" required
+                         style="width: 100%; height: 55px; font-size: 16px; background: transparent; color: #ffffff; padding: 0 20px; border: 2px solid #c6c3c3; border-radius: 30px; outline: none; appearance: none; cursor: pointer;"
+                         onchange="bubbleRoleLabel(this)">
+                     <option value="" disabled selected>Choose your role</option>
+                     <option value="admin" {% if role == "admin" %}selected{% endif %}>Admin</option>
+                     <option value="doctor" {% if role == "doctor" %}selected{% endif %}>Doctor</option>
+                     <option value="receptionist" {% if role == "receptionist" %}selected{% endif %}>Receptionist</option>
+                     <option value="patient" {% if role == "patient" %}selected{% endif %}>Patient</option>
+                 </select>
+                 <i class="bx bx-group" style="position: absolute; top: 18px; right: 25px; font-size: 20px; color: #000;"></i>
+             </div>
+
+             <div class="remember-forgot">
+                 <div class="remember-me">
+                     <input type="checkbox" id="remember" name="remember">
+                     <label for="remember">Remember me</label>
+                 </div>
+             </div>
+
+             <div class="forgot">
+                 <a href="#">Forgot password?</a>
+             </div>
+
+             <div class="input-box">
+                 <input type="submit" class="input-submit" value="Login">
+             </div>
+         </form>
+
+         <div class="signup">
+             <span>Don't have an account? <a href="{% url 'signup' %}">Signup</a></span>
+         </div>
+     </div>
+ </div>
+
+<script>
+
+    function bubbleRoleLabel(selectElement) {
+        const label = selectElement.previousElementSibling;
+        if (selectElement.value !== "") {
+            label.style.opacity = "1";
+            label.style.transform = "translateY(-30px) scale(1)";
+        } else {
+            label.style.opacity = "0";
+            label.style.transform = "scale(0.9)";
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const messages = document.querySelectorAll('.message');
+        messages.forEach(message => {
+            const messageText = message.textContent;
+            const messageType = message.classList.contains('error') ? 'error' : 'success';
+
+            if (messageType === 'error') {
+                alert(`Error: ${messageText}`);
+            } else if (messageType === 'success') {
+                alert(`Success: ${messageText}`);
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

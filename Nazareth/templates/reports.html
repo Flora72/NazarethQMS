@@ -1,0 +1,58 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Nazareth Hospital</title>
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    <link rel="stylesheet" href="{% static 'css/reports.css' %}">
+</head>
+<body>
+    <header class="header">
+        <a href="{% url 'index' %}" class="logo">Nazareth Hospital</a>
+        <nav class="navbar">
+            <a href="{% url 'patient_list' %}">Patients</a>
+            <a href="{% url 'health_records' %}">Health Records</a>
+            <a href="{% url 'appointments' %}">Appointments</a>
+            <a href="{% url 'contact' %}">Contact</a>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Generate and View Reports</h1>
+
+        <section class="filters">
+            <h2>Filter Reports</h2>
+            <form>
+                <label for="report-type">Select Report Type:</label>
+                <select id="report-type" name="report-type">
+                    <option value="patient-statistics">Patient Statistics</option>
+                    <option value="health-records">Health Records Overview</option>
+                    <option value="appointments-trends">Appointments Trends</option>
+                </select>
+
+                <label for="date-range">Select Date Range:</label>
+                <input type="date" id="start-date" name="start-date"> to
+                <input type="date" id="end-date" name="end-date">
+
+                <button type="submit">Generate Report</button>
+            </form>
+        </section>
+
+
+        <section class="report-output">
+            <h2>Report Output</h2>
+            <p>No report generated yet. Select filters and click "Generate Report."</p>
+
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Nazareth Hospital. All rights reserved.</p>
+    </footer>
+
+
+
+</body>
+</html>

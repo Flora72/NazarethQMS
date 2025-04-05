@@ -1,0 +1,117 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <title>Dashboard - Nazareth Hospital</title>
+    <link rel="stylesheet" href="{% static 'css/doctor.css' %}">
+</head>
+<body>
+    <div class="container">
+
+            <div class="sidebar">
+        <ul>
+            <li>
+                <a href="#">
+                    <i class="fas fa-clinic-medical"></i>
+                    <div class="title">Nazareth Hospital</div>
+                </a>
+            </li>
+            <hr class="sidebar-divider">
+            <li>
+                <a href="{% url 'patient_doctor' %}">
+                    <i class="fas fa-user-injured"></i>
+                    <div class="title">Patients</div>
+                </a>
+            </li>
+             <li>
+                <a href="#">
+                    <i class="fas fa-notes-medical"></i>
+                    <div class="title">Health Records</div>
+                </a>
+            </li>
+             <li>
+                <a href="#">
+                    <i class="fas fa-calendar-check"></i>
+                    <div class="title">Appointments</div>
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class="fas fa-chart-line"></i>
+                    <div class="title">Reports</div>
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class="fas fa-envelope"></i>
+                    <div class="title">Contact</div>
+                </a>
+            </li>
+             <li>
+                <a href="{% url 'logout_view' %}">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <div class="title">Logout</div>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+
+            <div class="cards">
+                <div class="card">
+                    <div class="card-content">
+                        <div class="number">20</div>
+                        <div class="card-name">Total Patients</div>
+                    </div>
+                    <div class="icon-box">
+                        <i class="fas fa-user-injured"></i>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-content">
+                        <div class="number">5</div>
+                        <div class="card-name">Upcoming Appointments</div>
+                    </div>
+                    <div class="icon-box">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-content">
+                        <div class="number">10</div>
+                        <div class="card-name">Pending Reports</div>
+                    </div>
+                    <div class="icon-box">
+                        <i class="fas fa-file-medical-alt"></i>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-content">
+                        <div class="number">8</div>
+                        <div class="card-name">Messages</div>
+                    </div>
+                    <div class="icon-box">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <h2>Quick Actions</h2>
+                <div class="buttons">
+                    <a href="#" class="btn"><i class="fas fa-user-plus"></i> Add Patient</a>
+                    <a href="#" class="btn"><i class="fas fa-calendar-plus"></i> Schedule Appointment</a>
+                    <a href="#" class="btn"><i class="fas fa-file-download"></i> Download Reports</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

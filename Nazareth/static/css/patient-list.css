@@ -1,0 +1,159 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 20px auto;
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+th, td {
+    text-align: center;
+    padding: 12px;
+}
+
+th {
+    background-color: #007bff;
+    color: #fff;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: #f9f9f9;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #e9ecef;
+}
+
+tr.observation {
+    background-color: #fffbeb;
+}
+
+tr.in_queue {
+    background-color: #e6f4ea;
+}
+
+tr.discharged {
+    background-color: #f8d7da;
+}
+
+
+button {
+    padding: 10px 15px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    margin: 5px;
+}
+
+.btn-primary {
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-notify {
+    background-color: #FFA500;
+    color: #fff;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn-notify:hover {
+    background-color: #cc8400;
+}
+
+.btn-seen {
+    background-color: #DC3545;
+    color: #fff;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn-seen:hover {
+    background-color: #a71d2a;
+}
+
+
+.btn-details {
+    background-color: #6C757D;
+    color: #fff;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn-details:hover {
+    background-color: #5a6268;
+}
+
+
+.btn-back {
+    background-color: #17A2B8;
+    color: #fff;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn-back:hover {
+    background-color: #117a8b;
+}
+
+.badge {
+    padding: 5px 10px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 12px;
+    display: inline-block;
+    text-align: center;
+}
+
+.badge-waiting {
+    background-color: #FFD700;
+    color: black;
+}
+
+.badge-in-queue {
+    background-color: #1E90FF;
+    color: white;
+}
+
+.badge-under-observation {
+    background-color: #FF8C00;
+    color: white;
+}
+
+.badge-discharged {
+    background-color: #32CD32;
+    color: white;
+}
+
+.badge-no-queue {
+    background-color: #A9A9A9;
+    color: white;
+}
