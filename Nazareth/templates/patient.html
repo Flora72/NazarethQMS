@@ -52,6 +52,81 @@
         .btn i {
             font-size: 18px;
         }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: linear-gradient(blue, deepskyblue);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            width: 400px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .modal-content h3 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .modal-content form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .modal-content button {
+            align-self: center;
+            background-color: white;
+            color: blue;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        .modal-content button:hover {
+            background-color: lightblue;
+            color: white;
+        }
+
+        .close-btn {
+            background-color: red;
+            color: white;
+        }
+
+        .close-btn:hover {
+            background-color: darkred;
+        }
+
+        /* Optional: Fade-in animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -63,43 +138,46 @@
                     <i class="fas fa-user-circle"></i>
                     <div class="title">Welcome, {{ name }}</div>
                 </a>
-                  <hr class="sidebar-divider">
-                    <li>
-                        <a href="#" class="sidebar-link" data-target="appointments">
-                            <i class="fas fa-calendar-check"></i>
-                            <div class="title">My Appointments</div>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="sidebar-link" data-target="medications">
-                            <i class="fas fa-prescription-bottle-alt"></i>
-                            <div class="title">Medications</div>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="sidebar-link" data-target="lab-results">
-                            <i class="fas fa-file-medical-alt"></i>
-                            <div class="title">Lab Results</div>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="sidebar-link" data-target="bills">
-                            <i class="fas fa-wallet"></i>
-                            <div class="title">Bills & Payments</div>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="sidebar-link" data-target="profile-settings">
-                            <i class="fas fa-user-cog"></i>
-                            <div class="title">Profile Settings</div>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{% url 'logout_view' %}">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <div class="title">Logout</div>
-                        </a>
-                    </li>
+                <hr class="sidebar-divider">
+
+            <li>
+                <a href="#" class="sidebar-link" data-target="appointments">
+                    <i class="fas fa-calendar-check"></i>
+                    <div class="title">My Appointments</div>
+                </a>
+            </li>
+
+
+            <li>
+                <a href="#" class="sidebar-link" data-target="medications">
+                    <i class="fas fa-prescription-bottle-alt"></i>
+                    <div class="title">Medications</div>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="sidebar-link" data-target="lab-results">
+                    <i class="fas fa-file-medical-alt"></i>
+                    <div class="title">Lab Results</div>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="sidebar-link" data-target="bills">
+                    <i class="fas fa-wallet"></i>
+                    <div class="title">Bills & Payments</div>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="sidebar-link" data-target="profile-settings">
+                    <i class="fas fa-user-cog"></i>
+                    <div class="title">Profile Settings</div>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'logout_view' %}">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <div class="title">Logout</div>
+                </a>
+            </li>
         </ul>
     </div>
 
@@ -148,13 +226,16 @@
 
             <div class="card queue-card">
                 <div class="card-content">
-                    <div class="number" id="queuePositionCard">{{ queue_number|default:"N/A" }}</div>
+                    <div class="number" id="queuePositionCard">
+                        {{ queue_number|default:"N/A" }}
+                    </div>
                     <div class="card-name">Your Queue Position</div>
                 </div>
                 <div class="icon-box">
                     <i class="fas fa-users"></i>
                 </div>
             </div>
+
 
             <div class="card">
                 <div class="card-content">
@@ -170,8 +251,22 @@
 
         <div class="section" id="appointments">
             <h3>My Appointments</h3>
-            <p>List of your upcoming appointments will be displayed here.</p>
+            {% if appointments %}
+                <ul>
+                    {% for appointment in appointments %}
+                        <li>
+                            <strong>Date:</strong> {{ appointment.date|date:"D, M j, Y H:i A" }}<br>
+                            <strong>Doctor:</strong> {{ appointment.doctor.name }}<br>
+                            <strong>Reason:</strong> {{ appointment.reason }}<br>
+                            <strong>Contact:</strong> {{ appointment.contact_phone }} | {{ appointment.contact_email }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>You have no upcoming appointments.</p>
+            {% endif %}
         </div>
+
 
         <div class="section" id="medications">
             <h3>Medications</h3>
@@ -201,38 +296,84 @@
                 <a href="#" class="btn" id="downloadReports"><i class="fas fa-download"></i> Download Records</a>
             </div>
         </div>
+
+
+        <div id="appointmentModal" class="modal-overlay">
+            <div class="modal-content">
+                <h3>Book Appointment</h3>
+                <form id="appointmentForm" method="POST" action="/book-appointment/">
+                    {% csrf_token %}
+
+                    <label for="patient_name">Name:</label>
+                    <input type="text" id="patient_name" name="patient_name" required>
+
+                    <label for="phone">Phone Number:</label>
+                    <input type="tel" id="phone" name="phone" required>
+
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+
+
+                    <label for="date">Date:</label>
+                    <input type="datetime-local" id="date" name="date" required>
+
+                    <label for="doctor">Doctor:</label>
+                    <select id="doctor" name="doctor" required>
+                        {% for doctor in doctors %}
+                            <option value="{{ doctor.id }}">{{ doctor.name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <label for="reason">Reason:</label>
+                    <textarea id="reason" name="reason" placeholder="Describe your condition or reason for visit"
+                              required></textarea>
+
+                    <button type="submit">Submit</button>
+                    <button type="button" class="close-btn" id="closeAppointmentModal">Cancel</button>
+                </form>
+            </div>
+        </div>
+
+
+        <div id="contactModal" class="modal-overlay">
+            <div class="modal-content">
+                <h3>Contact Doctor</h3>
+                <form id="contactForm">
+                    <label for="message">Your Message:</label>
+                    <textarea name="message" required></textarea>
+
+                    <button type="submit">Send</button>
+                    <button type="button" class="close-btn" id="closeContactModal">Cancel</button>
+                </form>
+            </div>
+        </div>
+
     </div>
 </div>
 
 <div class="loading" id="loadingIndicator">Loading queue position...</div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const queuePositionElement = document.getElementById('queuePosition');
-        const loadingIndicator = document.getElementById('loadingIndicator');
+   document.addEventListener('DOMContentLoaded', function () {
+    const queuePositionElement = document.getElementById('queuePosition');
 
-        function fetchQueuePosition() {
-            loadingIndicator.style.display = 'block';
+    function fetchQueuePosition() {
+        const patientName = "{{ name }}";
+        fetch(`/get_queue_position/?name=${patientName}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.queue_position) {
+                    queuePositionElement.textContent = data.queue_position;
+                } else {
+                    queuePositionElement.textContent = "N/A";
+                    console.error(data.error || "Error fetching queue position");
+                }
+            })
+            .catch(error => console.error("Error fetching queue position:", error));
+    }
 
-            const patientName = "{{ name }}";
+    fetchQueuePosition();
 
-            fetch(`/get_queue_position/?name=${patientName}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.queue_position) {
-                        queuePositionElement.textContent = data.queue_position;
-                    } else {
-                        queuePositionElement.textContent = "N/A";
-                        console.error('Error:', data.error);
-                    }
-                })
-                .catch(error => console.error('Error fetching queue position:', error))
-                .finally(() => {
-                    loadingIndicator.style.display = 'none';
-                });
-        }
-
-        fetchQueuePosition();
         setInterval(fetchQueuePosition, 60000);
 
         // Sidebar link functionality
@@ -251,25 +392,88 @@
             });
         });
 
-        // Quick Action Button Events
-        document.getElementById('bookAppointment').addEventListener('click', function () {
-            alert(`Booking appointment for ${"{{ name }}"}`);
+
+
+        // Book Appointment Modal
+        const bookAppointmentModal = document.getElementById('appointmentModal');
+        const closeAppointmentModalBtn = document.getElementById('closeAppointmentModal');
+        const bookAppointmentBtn = document.getElementById('bookAppointment');
+
+        bookAppointmentBtn.addEventListener('click', function () {
+            bookAppointmentModal.style.display = 'flex';
         });
 
-        document.getElementById('contactDoctor').addEventListener('click', function () {
-            alert(`Contacting doctor for ${"{{ name }}"}`);
+        closeAppointmentModalBtn.addEventListener('click', function () {
+            bookAppointmentModal.style.display = 'none';
         });
 
-        document.getElementById('downloadReports').addEventListener('click', function () {
-            const patientInfo = `Name: {{ name }}\nQueue Position: {{ queue_number }}\nDiagnostics: Normal`;
-            const blob = new Blob([patientInfo], {type: 'text/plain'});
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'patient_info.txt';
-            link.click();
+        document.getElementById('appointmentForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            fetch('/book-appointment/', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || 'Appointment booked successfully!');
+                    event.target.reset();
+                })
+                .catch(error => console.error('Error booking appointment:', error))
+                .finally(() => {
+                    bookAppointmentModal.style.display = 'none';
+                });
         });
-    });
+
+        // Contact Doctor Modal
+        const contactDoctorModal = document.getElementById('contactModal');
+        const closeContactModalBtn = document.getElementById('closeContactModal');
+        const contactDoctorBtn = document.getElementById('contactDoctor');
+
+        contactDoctorBtn.addEventListener('click', function () {
+            contactDoctorModal.style.display = 'flex';
+        });
+
+        closeContactModalBtn.addEventListener('click', function () {
+            contactDoctorModal.style.display = 'none';
+        });
+
+        document.getElementById('contactForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            fetch('/contact-doctor/', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || 'Message sent successfully!');
+                    event.target.reset();
+                })
+                .catch(error => console.error('Error contacting doctor:', error))
+                .finally(() => {
+                    contactDoctorModal.style.display = 'none';
+                });
+        });
+
+        // Download Records
+        document.getElementById('downloadRecords').addEventListener('click', function () {
+            fetch('/download-records/')
+                .then(response => response.blob())
+                .then(blob => {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = 'patient_records.txt';
+                    link.click();
+                })
+                .catch(error => console.error('Error downloading records:', error));
+        });
+    })
+    ;
 </script>
+
 
 </body>
 </html>

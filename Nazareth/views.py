@@ -1,23 +1,27 @@
+import csv
+import json
 import logging
 import re
-import secrets
-import string
+from datetime import datetime
+
 import requests
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ValidationError
 from django.core.serializers import serialize
 from django.db import IntegrityError
 from django.db import transaction
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import get_template
 from django.urls import reverse
+from django.utils.timezone import make_aware
 from django_daraja.mpesa.core import MpesaClient
-import json
-from django.http import HttpResponse
-from .models import Patient, Queue, Doctor, CustomUser, Department, PatientRecord
+from xhtml2pdf import pisa
+
+from .models import Appointment
+from .models import Patient, Doctor, CustomUser, Department, PatientRecord, Payment
 from .utils import initialize_africas_talking
 
 
@@ -27,9 +31,11 @@ from .utils import initialize_africas_talking
 def index(request):
     return render(request, 'index.html')
 
+
 # .................................#
 # AUTHENTICATION VIEWS            #
 # .................................#
+
 
 logger = logging.getLogger(__name__)
 
@@ -39,24 +45,34 @@ def signup_view(request):
         email = request.POST.get('email', '').strip()
         role = request.POST.get('role', '').strip()
         password = request.POST.get('pass', '').strip()
+        phone_number = request.POST.get('phone_number', '').strip()
 
-        if not all([username, email, role, password]):
-            messages.error(request, "All fields are required.")
+        logger.debug(f"Captured Form Data - Username: {username}, Email: {email}, Role: {role}, Phone: {phone_number}")
+
+        if not all([username, email, role, password, phone_number]):
+            messages.error(request, "All fields are required, including phone number.")
             return render(request, 'signup.html', {
                 'username': username,
                 'email': email,
                 'role': role,
             })
 
-        # CHECK POINT FOR THE EXISTENCE OF A USER
+        try:
+            phone_number = format_phone_number(phone_number)
+        except ValueError as e:
+            logger.error(f"Phone Number Formatting Failed: {e}")
+            messages.error(request, "Invalid phone number. Please use the format +254XXXXXXXXX.")
+            return render(request, 'signup.html', {
+                'username': username,
+                'email': email,
+                'role': role,
+            })
+
         if CustomUser.objects.filter(username=username).exists():
-            messages.error(request, "Username already taken.")
+            messages.error(request, f"Username '{username}' is already taken. Please choose a different username.")
             return render(request, 'signup.html')
 
         try:
-
-
-            # CREATING THE USER
 
             user = CustomUser.objects.create(
                 username=username,
@@ -66,28 +82,26 @@ def signup_view(request):
             user.set_password(password)
             user.save()
 
-            # Handle patients
             if role == 'patient':
                 with transaction.atomic():
 
-                    existing_patient = Patient.objects.filter(name=username, queue_number__isnull=False).first()
+                    existing_patient = Patient.objects.filter(name=username, phone_number=phone_number).first()
 
                     if existing_patient:
-                        logger.info(
-                            f"Existing Patient Found: {existing_patient.name}, Queue Position: {existing_patient.queue_number}")
-
                         existing_patient.in_queue = True
+                        existing_patient.hidden = False
                         existing_patient.save()
+                        logger.info(f"Updated Patient: {existing_patient.name}, Queue Position: {existing_patient.queue_number}")
                     else:
 
-                        last_patient = Patient.objects.filter(in_queue=True).order_by('-queue_number').first()
-                        new_queue_number = last_patient.queue_number + 1 if last_patient else 1
+                        new_queue_number = get_next_queue_number()
 
                         Patient.objects.create(
                             name=username,
+                            phone_number=phone_number,
                             queue_number=new_queue_number,
                             in_queue=True,
-                            hidden=True,
+                            hidden=False,
                         )
                         logger.info(f"New Patient Created: {username}, Queue Position: {new_queue_number}")
 
@@ -96,21 +110,21 @@ def signup_view(request):
 
         except Exception as e:
             logger.error(f"Error during signup: {e}")
-            messages.error(request, "An error occurred during registration.")
-            return render(request, 'signup.html')
+            messages.error(request, "An error occurred during registration. Please try again.")
+            return render(request, 'signup.html', {'username': username, 'email': email, 'role': role})
 
     return render(request, 'signup.html')
+
+
 
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         password = request.POST.get('pass', '').strip()
 
-
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-
 
             if user.role == 'patient':
                 return redirect('patient')
@@ -125,6 +139,7 @@ def login_view(request):
 
     return render(request, 'login.html')
 
+
 def logout_view(request):
     logout(request)
     return redirect('index')
@@ -133,59 +148,50 @@ def logout_view(request):
 # .................................#
 # SMS VIEWS                       #
 # .................................#
+
 def validate_phone_number(phone_number):
+
     return bool(re.match(r'^\+254\d{9}$', phone_number))
 
 
 def format_phone_number(phone_number):
-    if not phone_number.startswith("+"):
+    phone_number = phone_number.strip()
+
+    if not phone_number.startswith("+254"):
         phone_number = "+254" + phone_number.lstrip("0")
+
+    if not validate_phone_number(phone_number):
+        raise ValueError(f"Invalid formatted phone number: {phone_number}")
+
     return phone_number
 
-def generate_random_password(length=8):
-    """
-    Generates a secure random password.
-    """
-    characters = string.ascii_letters + string.digits + string.punctuation
-    return ''.join(secrets.choice(characters) for _ in range(length))
-
 def send_sms_notification(phone_number, message):
-
     try:
-        # Initialize the SMS service
+
         sms = initialize_africas_talking()
 
-        # Validate and format the phone number
         if not validate_phone_number(phone_number):
             raise ValueError(f"Invalid phone number: {phone_number}")
         formatted_phone_number = format_phone_number(phone_number)
 
-        # Send the SMS
+
         response = sms.send(message, [formatted_phone_number], sender_id="NazarethQMS")
         print(f"SMS sent to {formatted_phone_number} using Sender ID 'NazarethQMS': {message}")
 
         return response
 
     except Exception as e:
-        # Handle any exceptions that occur
+
         print(f"Failed to send SMS: {str(e)}")
         return {"error": str(e)}
 
+
 def send_registration_notification(patient):
-
     try:
-
-        if not patient.temp_password:
-            patient.temp_password = generate_random_password()
-            patient.save()
-
-
         phone_number = patient.phone_number
-        temp_password = patient.temp_password
         message = (
             f"Dear {patient.name}, you have been registered successfully! "
             f"Your queue position is {patient.queue_number}. "
-            f"Login details: Temporary Password: {temp_password}. "
             "Thank you!"
         )
         response = send_sms_notification(phone_number, message)
@@ -195,8 +201,8 @@ def send_registration_notification(patient):
         print(f"Failed to send registration notification: {str(e)}")
         return {"error": str(e)}
 
-def send_queue_update_notification(patient):
 
+def send_queue_update_notification(patient):
     try:
 
         phone_number = patient.phone_number
@@ -215,27 +221,13 @@ def send_queue_update_notification(patient):
         return {"error": str(e)}
 
 
-def send_login_details(phone_number, username, temp_password):
-
-    try:
-        if not phone_number or phone_number.strip() == "":
-            raise ValueError("Invalid phone number.")
-
-        message = (
-            f"Dear {username}, you have been registered successfully! "
-            f"Login details: Username: {username}, Password: {temp_password}. "
-            "Thank you!"
-        )
-        send_sms_notification(phone_number, message)
-    except Exception as e:
-        print(f"Failed to send login details: {str(e)}")
-
-
 # .................................#
 # PATIENT VIEWS                   #
 # .................................#
 
+
 logger = logging.getLogger(__name__)
+
 
 def register_patient(request):
     if request.method == "POST":
@@ -243,52 +235,68 @@ def register_patient(request):
             sms = initialize_africas_talking()
 
             with transaction.atomic():
+                # Extract form data
+                name = request.POST.get('name', '').strip()
+                age = request.POST.get('age', '').strip()
+                gender = request.POST.get('gender', '').strip()
+                service = request.POST.get('service', '').strip()
+                department_id = request.POST.get('department', '').strip()
+                phone_number = request.POST.get('phone_number', '').strip()
 
-                name = request.POST.get('name')
-                age = int(request.POST.get('age'))
-                gender = request.POST.get('gender')
-                service = request.POST.get('service')
-                department_id = request.POST.get('department')
-                phone_number = request.POST.get('phone_number')
+                # Ensure required fields are provided
+                if not all([name, age, gender, department_id, phone_number]):
+                    raise ValueError("Name, age, gender, department, and phone number are required fields.")
 
-
+                # Priority mapping
                 priority_map = {"1": "low", "2": "medium", "3": "high"}
                 priority = priority_map.get(request.POST.get('priority'))
                 if not priority:
                     raise ValueError("Invalid priority selected")
 
-
+                # Retrieve department
                 department = Department.objects.get(id=department_id)
                 logger.info(f"Selected Department: {department.name}")
 
-
-                existing_patient = Patient.objects.filter(name=name, department=department).first()
+                # Check for existing patient
+                existing_patient = Patient.objects.filter(
+                    name=name, department=department, phone_number=phone_number
+                ).first()
 
                 if existing_patient:
-                    logger.info(f"Existing Patient Found: {existing_patient.name}, Queue Position: {existing_patient.queue_number}")
-                    patient = existing_patient
-                else:
-
-                    patient = Patient.objects.create(
-                        name=name,
-                        age=age,
-                        gender=gender,
-                        phone_number=phone_number,
-                        department=department,
-                        priority=priority,
-                        in_queue=True
+                    logger.warning(
+                        f"Existing patient found: {existing_patient.name}, Queue Position: {existing_patient.queue_number}"
                     )
-                    logger.info(f"Created Patient: {patient}")
+                    # Update `in_queue` to True and assign a queue number if needed
+                    if not existing_patient.in_queue:
+                        existing_patient.in_queue = True
+                        if existing_patient.queue_number is None:
+                            last_queue = Patient.objects.filter(in_queue=True).order_by('-queue_number').first()
+                            queue_position = last_queue.queue_number + 1 if last_queue else 1
+                            existing_patient.queue_number = queue_position
+                        existing_patient.save()
+                    messages.warning(
+                        request, f"Patient '{name}' is already registered and has been updated."
+                    )
+                    return redirect('patient_list')
 
+                # Assign a queue number for new patients
+                last_queue = Patient.objects.filter(in_queue=True).order_by('-queue_number').first()
+                queue_position = last_queue.queue_number + 1 if last_queue else 1
 
-                if patient.queue_number is None:
-                    last_queue = Queue.objects.filter(department=department).order_by('-id').first()
-                    queue_position = last_queue.id + 1 if last_queue else 1
-                    patient.queue_number = queue_position
-                    patient.save()
-                    logger.info(f"Assigned Queue Position: {queue_position}")
+                # Create new patient
+                patient = Patient.objects.create(
+                    name=name,
+                    age=int(age),
+                    gender=gender,
+                    phone_number=phone_number,
+                    department=department,
+                    priority=priority,
+                    in_queue=True,
+                    queue_number=queue_position,
+                )
+                logger.info(f"Created Patient: {patient}, Queue Position: {queue_position}")
 
-
+                # Create or update patient record
                 patient_record, created = PatientRecord.objects.update_or_create(
                     patient=patient,
                     defaults={
@@ -299,11 +307,16 @@ def register_patient(request):
                 )
                 logger.info(f"Created/Updated PatientRecord: {patient_record}")
 
+                # Cleanup invalid patients
+                invalid_patients = Patient.objects.filter(queue_number=None, in_queue=False)
+                logger.info(f"Cleaning up invalid patient records: {invalid_patients.count()}")
+                invalid_patients.delete()
 
-            message = f"Dear {name}, you have been successfully registered. Your queue position is {patient.queue_number}."
+            # Send SMS notification
+            message = f"Dear {name}, you have been successfully registered. Your queue position is {queue_position}."
             sms.send(message, [phone_number])
             logger.info(f"SMS Sent to {phone_number}: {message}")
-
+            messages.success(request, f"Patient '{name}' registered successfully.")
             return redirect('patient_list')
 
         except Exception as e:
@@ -311,8 +324,8 @@ def register_patient(request):
             messages.error(request, "An error occurred during registration. Please try again.")
             return render(request, 'register_patient.html', {'departments': Department.objects.all()})
 
+    # Render registration page
     return render(request, 'register_patient.html', {'departments': Department.objects.all()})
-
 
 
 def get_patient_list(request):
@@ -334,40 +347,58 @@ def patient_add(request):
 
         return render(request, 'patient.html')
 
+
 def patient_edit(request, id):
     patient = get_object_or_404(Patient, id=id)
     priorities = ['High', 'Medium', 'Low']
     statuses = ['in_queue', 'waiting', 'under_observation', 'discharged']
 
     if request.method == 'POST':
-        department_name = request.POST.get('department')
-        if department_name:
-            try:
+        try:
+            department_name = request.POST.get('department')
+            if department_name:
+                try:
+                    department = Department.objects.get(name=department_name)
+                    patient.department = department
+                except Department.DoesNotExist:
+                    messages.error(request, "Invalid department selected.")
+                    return render(request, 'edit_patient.html', {
+                        'patient': patient,
+                        'departments': Department.objects.all(),
+                        'priorities': priorities,
+                        'statuses': statuses,
+                    })
 
-                department = Department.objects.get(name=department_name)
-                patient.department = department
-            except Department.DoesNotExist:
-                messages.error(request, "Invalid department selected.")
-                return render(request, 'edit_patient.html', {
-                    'patient': patient,
-                    'departments': Department.objects.all(),
-                    'priorities': priorities,
-                    'statuses': statuses,
-                })
+            # Update other patient fields
+            patient.name = request.POST.get('name', patient.name)
+            patient.age = request.POST.get('age', patient.age)
+            patient.gender = request.POST.get('gender', patient.gender)
+            patient.priority = request.POST.get('priority', patient.priority)
+            patient.phone_number = request.POST.get('phone_number', patient.phone_number)
+            patient.status = request.POST.get('status', patient.status)
 
-        # Update other patient fields
-        patient.name = request.POST.get('name', patient.name)
-        patient.age = request.POST.get('age', patient.age)
-        patient.gender = request.POST.get('gender', patient.gender)
-        patient.priority = request.POST.get('priority', patient.priority)
-        patient.phone_number = request.POST.get('phone_number', patient.phone_number)
-        patient.status = request.POST.get('status', patient.status)
+            # Save patient
+            patient.save()
+            messages.success(request, "Patient details updated successfully.")
 
-        patient.save()
-        messages.success(request, "Patient details updated successfully.")
-        return redirect('patient_list')
+            # Cleanup invalid patients
+            invalid_patients = Patient.objects.filter(queue_number=None, in_queue=False)
+            invalid_patients.delete()
+            logger.info(f"Cleaned up {invalid_patients.count()} invalid patient records.")
 
+            return redirect('patient_list')
 
+        except Exception as e:
+            logger.error(f"Error during patient edit: {e}")
+            messages.error(request, "An error occurred while updating patient details.")
+            return render(request, 'edit_patient.html', {
+                'patient': patient,
+                'departments': Department.objects.all(),
+                'priorities': priorities,
+                'statuses': statuses,
+            })
+
+    # Render edit page
     return render(request, 'edit_patient.html', {
         'patient': patient,
         'departments': Department.objects.all(),
@@ -395,7 +426,8 @@ def update_patient_status(request, id):
 
 
 def patient_list(request):
-    patients = Patient.objects.prefetch_related('queues').select_related('department').filter(in_queue=True, hidden=False)
+    patients = Patient.objects.prefetch_related('queues').select_related('department').filter(in_queue=True,
+                                                                                              hidden=False)
 
     for patient in patients:
         queue = patient.queues.order_by('priority').first()
@@ -444,11 +476,17 @@ def create_patient(name, age, gender, phone_number, service, priority, departmen
 #       QUEUE VIEWS               #
 # .................................#
 def queue_management(request):
-
     patients = Patient.objects.filter(in_queue=True).order_by('queue_number')
     doctors = Doctor.objects.all()
 
     return render(request, 'queue_management.html', {'patients': patients, 'doctors': doctors})
+
+def get_next_queue_number():
+    last_patient = Patient.objects.order_by('-queue_number').first()
+    if last_patient:
+        return last_patient.queue_number + 1
+    return 1
+
 
 def get_queue_position(request):
     name = request.GET.get('name', '').strip()
@@ -462,7 +500,6 @@ def get_queue_position(request):
             return JsonResponse({'error': 'Patient not found or no queue position available'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-
 
 def get_queue_status(request):
     patients = Patient.objects.prefetch_related('queues').all()
@@ -498,14 +535,19 @@ def queue_update_api(request):
 
     return JsonResponse({"queues": queues_data})
 
+
 def patient_delete(request, patient_id):
     if request.method == "POST":
         patient = get_object_or_404(Patient, id=patient_id)
         patient.delete()
+
         remaining_patients = Patient.objects.filter(in_queue=True).order_by('queue_number')
         for index, patient in enumerate(remaining_patients, start=1):
             patient.queue_number = index
             patient.save()
+
+        invalid_patients = Patient.objects.filter(queue_number=None, in_queue=False)
+        invalid_patients.delete()
 
         messages.success(request, "Patient deleted successfully.")
         return redirect('queue_management')
@@ -564,14 +606,12 @@ def assign_patient(request, patient_id):
             patient.assigned_doctor = doctor
             patient.save()
 
-
             messages.success(request, f"Patient '{patient.name}' has been successfully assigned to Dr. {doctor.name}.")
             return redirect('queue_management')
         except Exception as e:
             # Error message
             messages.error(request, f"An error occurred while assigning the doctor: {str(e)}")
             return redirect('queue_management')
-
 
     messages.error(request, "Invalid request method. Please use POST for doctor assignment.")
     return redirect('queue_management')
@@ -584,7 +624,6 @@ def payments(request):
     patients = Patient.objects.filter(in_queue=True).order_by('name')
 
     consultation_fee = 100
-
 
     if request.method == 'POST':
         patient_id = request.POST.get('patient')
@@ -671,13 +710,11 @@ def stk_push_callback(request):
             receipt_number = data.get('Body', {}).get('stkCallback', {}).get('CallbackMetadata', {}).get('Item', [{}])[
                 1].get('Value', None)
 
-
             if result_code == 0:
                 print(f"Payment successful: Amount {amount}, Receipt {receipt_number}")
 
             else:
                 print(f"Payment failed: {result_desc}")
-
 
             return HttpResponse("Callback received successfully!", status=200)
         except json.JSONDecodeError:
@@ -694,9 +731,7 @@ def process_payment(request):
         amount = request.POST.get('amount', '0')
         payment_method = request.POST.get('payment_method', 'Not specified')
 
-
         print(f'Payment processed for {patient_name}: {services} - KES {amount} via {payment_method}')
-
 
         return render(request, 'process_payment.html', {
             'patient_name': patient_name,
@@ -722,43 +757,50 @@ def receptionist(request):
     patients = Patient.objects.all()
     return render(request, 'receptionist.html')
 
+
 logger = logging.getLogger(__name__)
+
+
 @login_required
 def patient(request):
     try:
         patient_name = request.user.username
-        response = requests.get(f'http://127.0.0.1:8000/get-queue-position/?name={patient_name}')
 
+        # Fetch queue position
+        response = requests.get(f'http://127.0.0.1:8000/get_queue_position/?name={patient_name}')
         if response.status_code == 200:
             data = response.json()
             queue_position = data.get('queue_position', 'N/A')
-
-            context = {
-                'name': patient_name,
-                'queue_number': queue_position,
-                'department': "N/A",
-                'priority': "N/A",
-                'status': "N/A",
-            }
         else:
-            logger.warning(f"Unable to fetch queue position for {patient_name}: {response.json()}")
-            context = {
-                'name': patient_name,
-                'queue_number': "N/A",
-                'department': "N/A",
-                'priority': "N/A",
-                'status': "N/A",
-            }
+            queue_position = "N/A"
+
+        appointments = Appointment.objects.filter(patient=request.user).order_by('date')
+
+
+        doctors = Doctor.objects.all()
+
+        context = {
+            'name': patient_name,
+            'appointments': appointments,
+            'queue_number': queue_position,
+            'doctors': doctors,
+            'department': "N/A",
+            'priority': "N/A",
+            'status': "N/A",
+        }
 
         return render(request, 'patient.html', context)
-
     except Exception as e:
         logger.error(f"Error fetching patient data: {e}")
         context = {
             'name': request.user.username,
+            'appointments': [],
             'queue_number': "N/A",
+            'doctors': [],
         }
         return render(request, 'patient.html', context)
+
+
 
 
 # .................................#
@@ -804,21 +846,36 @@ def call_next_patient(request, doctor_id):
     return JsonResponse({'error': 'Invalid request method.'})
 
 
-def notify_patient(request, patient_id):
+logger = logging.getLogger(__name__)
 
+def notify_patient(request, patient_id):
     try:
+
         patient = Patient.objects.get(id=patient_id)
         patient_name = patient.name
         patient_phone = patient.phone_number
         doctor_name = f"Dr. {patient.assigned_doctor.name}" if patient.assigned_doctor else "the doctor"
 
-        message = f"Dear {patient_name}, {doctor_name} is ready for you."
 
+        message = f"Dear {patient_name}, {doctor_name} is ready for you."
         logger.info(f"Sending SMS to {patient_phone}: {message}")
-        print(f"Notification to {patient_name}: {message}")
+
+
+        sms = initialize_africas_talking()
+        try:
+            response = sms.send(
+                message=message,
+                recipients=[patient_phone],
+                sender_id='NazarethQMS'
+            )
+            logger.info(f"SMS sent successfully to {patient_phone}: {response}")
+            print(f"Notification to {patient_name}: {message}")
+        except Exception as sms_error:
+            logger.error(f"Failed to send SMS to {patient_phone}: {sms_error}")
+            messages.error(request, f"Failed to send SMS: {sms_error}")
+            return redirect('patient_doctor')
 
         messages.success(request, f"Notification sent to {patient_name}.")
-
         return redirect('patient_doctor')
 
     except Patient.DoesNotExist:
@@ -830,7 +887,6 @@ def notify_patient(request, patient_id):
         logger.error(f"Error occurred while notifying patient {patient_id}: {e}")
         messages.error(request, f"Error occurred: {str(e)}")
         return redirect('patient_doctor')
-
 
 def mark_patient_seen(request, patient_id):
     if request.method == 'POST':
@@ -846,6 +902,7 @@ def mark_patient_seen(request, patient_id):
     messages.error(request, "Invalid request method.")
     return redirect('doctor')
 
+
 def filter_patients(request):
     department_name = request.GET.get('department')
     if department_name:
@@ -854,7 +911,6 @@ def filter_patients(request):
     else:
 
         patients = Patient.objects.all()
-
 
     departments = Department.objects.all()
 
@@ -870,3 +926,150 @@ def mark_next_patient(request, id):
     patient.status = 'In Progress'
     patient.save()
     return redirect('queue_status')
+
+# .................................#
+# REPORT GENERATION VIEWS          #
+# .................................#
+
+def report_view(request):
+
+    data = CustomUser.objects.all()
+    return render(request, 'report_view.html', {'data': data})
+
+def generate_full_report(request, report_type='csv'):
+    if report_type == 'pdf':
+        # Generate PDF report
+        template = get_template('report_view.html')
+        context = {
+            'patients': Patient.objects.all(),
+            'payments': Payment.objects.all(),
+            'users': CustomUser.objects.all()
+        }
+        html = template.render(context)
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="full_report.pdf"'
+        pisa_status = pisa.CreatePDF(html.encode('UTF-8'), dest=response)
+
+        if pisa_status.err:
+            return HttpResponse("PDF generation failed!")
+        return response
+
+    elif report_type == 'csv':
+        # Generate CSV report
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="full_report.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Report Type', 'Field 1', 'Field 2', 'Field 3'])
+
+        # Add Patient Data
+        writer.writerow(['Patients'])
+        writer.writerow(['Name', 'Phone Number', 'Queue Number', 'In Queue'])
+        for patient in Patient.objects.all():
+            writer.writerow([patient.name, patient.phone_number, patient.queue_number, patient.in_queue])
+
+        # Add Payment Data
+        writer.writerow([])
+        writer.writerow(['Payments'])
+        writer.writerow(['Amount', 'Payment Date', 'Patient ID'])
+        for payment in Payment.objects.all():
+            writer.writerow([payment.amount, payment.date, payment.patient_id])
+
+        return response
+
+    # Fallback if no report_type specified
+    return HttpResponse("Invalid report type!")
+
+def download_records_view(request):
+    patient = request.user
+    records = f"Name: {patient.name}\nQueue Position: {patient.queue_position}\nDiagnostics: Normal"
+    response = HttpResponse(records, content_type='text/plain')
+    response['Content-Disposition'] = 'attachment; filename="patient_records.txt"'
+    return response
+
+
+
+# .................................#
+# APPOINTMENTS VIEWS               #
+# .................................#
+
+@login_required
+def book_appointment_view(request):
+    if request.method == 'POST':
+        try:
+            # Extract form data
+            contact_phone = request.POST.get('phone')
+            contact_email = request.POST.get('email')
+            date_str = request.POST.get('date')  # Date string from the form
+            doctor_id = request.POST.get('doctor')
+            reason = request.POST.get('reason')
+
+            # Handle different datetime formats
+            try:
+                # Attempt to parse with seconds
+                naive_date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
+            except ValueError:
+                # Fallback to parsing without seconds
+                naive_date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M")
+
+            aware_date = make_aware(naive_date)  # Make datetime timezone-aware
+
+            # Fetch doctor and create appointment
+            doctor = Doctor.objects.get(id=doctor_id)
+            appointment = Appointment.objects.create(
+                patient=request.user,
+                contact_phone=contact_phone,
+                contact_email=contact_email,
+                date=aware_date,
+                doctor=doctor,
+                reason=reason,
+            )
+            return JsonResponse({'message': 'Appointment booked successfully!'})
+
+        except Doctor.DoesNotExist:
+            return JsonResponse({'error': 'Selected doctor does not exist.'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': f'Error booking appointment: {e}'}, status=400)
+
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
+
+def contact_doctor_view(request):
+    if request.method == 'POST':
+        patient = request.user
+        message = request.POST.get('message')
+
+        # Handle messaging logic (e.g., save to database, send email)
+        return JsonResponse({'message': 'Message sent successfully!'})
+
+@login_required
+def doctor_appointments_view(request):
+
+    if hasattr(request.user, 'role') and request.user.role == "Doctor":
+        appointments = Appointment.objects.filter(doctor__customuser=request.user).order_by('date')
+    else:
+        appointments = []
+
+    context = {
+        'appointments': appointments,
+    }
+    return render(request, 'doctor.html', context)
+
+@login_required
+def doctor_appointments_api(request):
+    if request.user.is_authenticated and getattr(request.user, 'role', '').lower() == "doctor":
+        appointments = Appointment.objects.filter(doctor__name=request.user.username).order_by('date')
+
+        data = [
+            {
+                'patient_name': appointment.patient.name,
+                'contact': appointment.patient.phone_number,
+                'date': appointment.date.strftime('%Y-%m-%d %H:%M:%S'),
+                'reason': appointment.reason,
+            }
+            for appointment in appointments
+        ]
+        return JsonResponse(data, safe=False)
+    else:
+        return JsonResponse({'error': 'Access denied. You must be logged in as a Doctor.'}, status=403)

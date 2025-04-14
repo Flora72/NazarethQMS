@@ -32,7 +32,8 @@
 
 
             <div class="input-box">
-                <input type="text" id="user" class="input-field" name="username" value="{{ username|default:'' }}" required>
+                <input type="text" id="user" class="input-field" name="username" value="{{ username|default:'' }}"
+                       required>
                 <label for="user" class="label">Username</label>
                 <i class="bx bx-user icon"></i>
             </div>
@@ -44,7 +45,8 @@
             </div>
 
             <div class="input-box" style="position: relative; display: flex; flex-direction: column; margin: 20px 0;">
-                <label for="role" class="label" style="position: absolute; top: 15px; left: 20px; background: #c6c3c3; padding: 0 5px; border-radius: 20px; color: #000000; font-size: 14px; opacity: 0; transform: scale(0.9); transition: all 2s ease;">
+                <label for="role" class="label"
+                       style="position: absolute; top: 15px; left: 20px; background: #c6c3c3; padding: 0 5px; border-radius: 20px; color: #000000; font-size: 14px; opacity: 0; transform: scale(0.9); transition: all 2s ease;">
                     Select Role
                 </label>
                 <select id="role" name="role" class="input-field" required
@@ -53,10 +55,12 @@
                     <option value="" disabled {% if role == None %}selected{% endif %}>Choose your role</option>
                     <option value="admin" {% if role == "admin" %}selected{% endif %}>Admin</option>
                     <option value="doctor" {% if role == "doctor" %}selected{% endif %}>Doctor</option>
-                    <option value="receptionist" {% if role == "receptionist" %}selected{% endif %}>Receptionist</option>
+                    <option value="receptionist" {% if role == "receptionist" %}selected{% endif %}>Receptionist
+                    </option>
                     <option value="patient" {% if role == "patient" %}selected{% endif %}>Patient</option>
                 </select>
-                <i class="bx bx-group" style="position: absolute; top: 18px; right: 25px; font-size: 20px; color: #000;"></i>
+                <i class="bx bx-group"
+                   style="position: absolute; top: 18px; right: 25px; font-size: 20px; color: #000;"></i>
             </div>
 
             <div class="input-box">
@@ -66,20 +70,18 @@
             </div>
 
 
-           <div class="input-box">
-               <input type="text" id="phone" class="input-field" name="phone" required><label for="phone" class="label">Phone number</label>
-               <i class="bx bx-phone icon"></i>
-           </div>
-          <div class="terms-and-conditions">
-              <label>
-                  <input type="checkbox" id="terms" name="terms" required>
-                  I agree to the terms & conditions
-              </label>
-          </div>
+            <div class="input-box">
+                <input type="text" id="phone" class="input-field" name="phone_number" required>
+                <label for="phone" class="label">Phone number</label>
+                <i class="bx bx-phone icon"></i>
+            </div>
 
-
-
-
+            <div class="terms-and-conditions">
+                <label>
+                    <input type="checkbox" id="terms" name="terms" required>
+                    I agree to the terms & conditions
+                </label>
+            </div>
 
 
             <div class="input-box">

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Full Report</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Full Report</h1>
+
+    <h2>Patients</h2>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Phone Number</th>
+            <th>Queue Number</th>
+            <th>In Queue</th>
+        </tr>
+        {% for patient in patients %}
+        <tr>
+            <td>{{ patient.name }}</td>
+            <td>{{ patient.phone_number }}</td>
+            <td>{{ patient.queue_number }}</td>
+            <td>{{ patient.in_queue }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Payments</h2>
+    <table>
+        <tr>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Patient ID</th>
+        </tr>
+        {% for payment in payments %}
+        <tr>
+            <td>{{ payment.amount }}</td>
+            <td>{{ payment.date }}</td>
+            <td>{{ payment.patient_id }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

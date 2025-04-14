@@ -17,6 +17,7 @@
             align-items: center;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
+
         .navbar a {
             color: white;
             text-decoration: none;
@@ -24,6 +25,7 @@
             border-radius: 5px;
             transition: background-color 0.3s, transform 0.2s;
         }
+
         .navbar a:hover {
             background-color: rgba(255, 255, 255, 0.2);
             transform: scale(1.05);
@@ -34,19 +36,23 @@
             border-collapse: collapse;
             margin: 20px 0;
         }
+
         table th, table td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: center;
         }
+
         table th {
             background-color: #f4f4f4;
             color: #333;
         }
+
         .dropdown {
             position: relative;
             display: inline-block;
         }
+
         .dropbtn {
             background-color: #3498db;
             color: white;
@@ -56,6 +62,7 @@
             cursor: pointer;
             border-radius: 5px;
         }
+
         .dropdown-content {
             display: none;
             position: absolute;
@@ -65,6 +72,7 @@
             min-width: 150px;
             z-index: 1;
         }
+
         .dropdown-content a, .dropdown-content form button {
             color: black;
             padding: 8px 12px;
@@ -75,12 +83,15 @@
             border: none;
             background: none;
         }
+
         .dropdown-content a:hover, .dropdown-content form button:hover {
             background-color: #f1f1f1;
         }
+
         .dropdown:hover .dropdown-content {
             display: block;
         }
+
         .popup {
             position: fixed;
             top: 50%;
@@ -95,6 +106,7 @@
             display: none;
             z-index: 1000;
         }
+
         .popup .close-btn {
             position: absolute;
             top: 10px;
@@ -103,6 +115,7 @@
             font-size: 20px;
             color: red;
         }
+
         .overlay {
             position: fixed;
             top: 0;
@@ -116,73 +129,85 @@
     </style>
 </head>
 <body>
-    <div class="navbar">
-        <a href="{% url 'receptionist' %}">Dashboard</a>
-        <a href="{% url 'register_patient' %}">Register Patient</a>
-        <a href="{% url 'patient_list' %}">Patient List</a>
-    </div>
+<div class="navbar">
+    <a href="{% url 'receptionist' %}">Dashboard</a>
+    <a href="{% url 'register_patient' %}">Register Patient</a>
+    <a href="{% url 'patient_list' %}">Patient List</a>
+</div>
 
-    <div class="container">
-        <h1>Queue Management</h1>
+<div class="container">
 
-        {% if patients %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Queue Number</th>
-                        <th>Name</th>
-                        <th>Age</th>
-                        <th>Gender</th>
-                        <th>Department</th>
-                        <th>Doctor</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for patient in patients %}
-                    <tr>
-                        <td>{{ patient.queue_number }}</td>
-                        <td>{{ patient.name }}</td>
-                        <td>{{ patient.age }}</td>
-                        <td>{{ patient.gender }}</td>
-                        <td>{{ patient.department }}</td>
-                        <td>
-                            {% if patient.assigned_doctor %}
-                                {{ patient.assigned_doctor.name }}
-                            {% else %}
-                                Not Assigned
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="dropdown">
-                                <button class="dropbtn">Actions ▼</button>
-                                <div class="dropdown-content">
-                                    <a href="{% url 'patient_edit' patient.id %}">Edit</a>
-                                    <a href="{% url 'move_patient' patient.queue_number 'up' %}">Move Up</a>
-                                    <a href="{% url 'move_patient' patient.queue_number 'down' %}">Move Down</a>
-                                    <form action="{% url 'clear_patient' patient.queue_number %}" method="post" style="margin: 0; padding: 0;">
-                                        {% csrf_token %}
-                                        <button type="submit">Clear</button>
-                                    </form>
-                                    <button onclick="showPopup('{{ patient.name }}', '{{ patient.age }}', '{{ patient.id }}')">Assign Doctor</button>
-                                    <form action="{% url 'patient_delete' patient.queue_number %}" method="post" style="margin: 0; padding: 0;">
-                                        {% csrf_token %}
-                                        <button type="submit">Delete Patient</button>
-                                    </form>
-                                </div>
+    <h1>Queue Management</h1>
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if patients %}
+        <table>
+            <thead>
+            <tr>
+                <th>Queue Number</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Gender</th>
+                <th>Department</th>
+                <th>Doctor</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for patient in patients %}
+                <tr>
+                    <td>{{ patient.queue_number }}</td>
+                    <td>{{ patient.name }}</td>
+                    <td>{{ patient.age }}</td>
+                    <td>{{ patient.gender }}</td>
+                    <td>{{ patient.department }}</td>
+                    <td>
+                        {% if patient.assigned_doctor %}
+                            {{ patient.assigned_doctor.name }}
+                        {% else %}
+                            Not Assigned
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="dropdown">
+                            <button class="dropbtn">Actions ▼</button>
+                            <div class="dropdown-content">
+                                <a href="{% url 'patient_edit' patient.id %}">Edit</a>
+                                <a href="{% url 'move_patient' patient.queue_number 'up' %}">Move Up</a>
+                                <a href="{% url 'move_patient' patient.queue_number 'down' %}">Move Down</a>
+                                <form action="{% url 'clear_patient' patient.queue_number %}" method="post"
+                                      style="margin: 0; padding: 0;">
+                                    {% csrf_token %}
+                                    <button type="submit">Clear</button>
+                                </form>
+                                <button onclick="showPopup('{{ patient.name }}', '{{ patient.age }}', '{{ patient.id }}')">
+                                    Assign Doctor
+                                </button>
+                                <form action="{% url 'patient_delete' patient.id %}" method="post"
+                                      style="margin: 0; padding: 0;">
+                                    {% csrf_token %}
+                                    <button type="submit">Delete Patient</button>
+                                </form>
                             </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p class="no-patients">No patients in the queue.</p>
-        {% endif %}
-    </div>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="no-patients">No patients in the queue.</p>
+    {% endif %}
+</div>
 
-    <!-- Pop-Up Form -->
-  <div class="overlay" id="overlay" onclick="closePopup()"></div>
+
+<div class="overlay" id="overlay" onclick="closePopup()"></div>
 <div class="popup" id="popupForm">
     <span class="close-btn" onclick="closePopup()">×</span>
     <form id="assignForm" method="post">
@@ -193,7 +218,7 @@
         <label for="doctor">Select Doctor:</label>
         <select id="doctor" name="doctor_name" required>
             {% for doctor in doctors %}
-            <option value="{{ doctor.name }}">{{ doctor.name }}</option>
+                <option value="{{ doctor.name }}">{{ doctor.name }}</option>
             {% endfor %}
         </select>
         <button type="submit" class="btn btn-assign">Assign</button>
@@ -201,29 +226,26 @@
 </div>
 
 
-      <script>
-        // Show the pop-up form
-        function showPopup(patientName, patientAge, patientId) {
-            document.getElementById('popupPatientName').textContent = patientName;
-            document.getElementById('popupPatientAge').textContent = patientAge;
+<script>
+    function showPopup(patientName, patientAge, patientId) {
+        document.getElementById('popupPatientName').textContent = patientName;
+        document.getElementById('popupPatientAge').textContent = patientAge;
 
-            // Update the form action dynamically
-            const form = document.getElementById('assignForm');
-            form.action = `/assign_patient/${patientId}/`;
+        const form = document.getElementById('assignForm');
+        form.action = `/assign_patient/${patientId}/`;
 
-            // Show pop-up and overlay
-            document.getElementById('popupForm').style.display = 'block';
-            document.getElementById('overlay').style.display = 'block';
-        }
+        document.getElementById('popupForm').style.display = 'block';
+        document.getElementById('overlay').style.display = 'block';
+    }
 
-        // Close the pop-up
-        function closePopup() {
-            document.getElementById('popupForm').style.display = 'none';
-            document.getElementById('overlay').style.display = 'none';
-        }
+
+    function closePopup() {
+        document.getElementById('popupForm').style.display = 'none';
+        document.getElementById('overlay').style.display = 'none';
+    }
 
     document.querySelectorAll('.dropdown-button').forEach(button => {
-        button.addEventListener('click', function(event) {
+        button.addEventListener('click', function (event) {
             event.preventDefault();
             const form = this.closest('form');
             if (form.action.includes('patient_delete')) {
@@ -235,130 +257,128 @@
                             'X-CSRFToken': '{{ csrf_token }}',
                         }
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert(data.message);
-                            location.reload(); // Refresh the page after successful deletion
-                        } else {
-                            alert(data.error);
-                        }
-                    })
-                    .catch(error => {
-                        alert("An error occurred while deleting the patient.");
-                    });
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert(data.message);
+                                location.reload();
+                            } else {
+                                alert(data.error);
+                            }
+                        })
+                        .catch(error => {
+                            alert("An error occurred while deleting the patient.");
+                        });
                 }
             }
         });
     });
 
-document.querySelectorAll('form[action*="assign_patient"]').forEach(form => {
-    form.addEventListener('submit', function(event) {
-        event.preventDefault();
+    document.querySelectorAll('form[action*="assign_patient"]').forEach(form => {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
 
-        const confirmAssign = confirm("Do you want to assign this patient to a doctor?");
-        if (confirmAssign) {
-            // Collect form data
-            const formData = new FormData(form);
+            const confirmAssign = confirm("Do you want to assign this patient to a doctor?");
+            if (confirmAssign) {
+                // Collect form data
+                const formData = new FormData(form);
 
-            fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value,
-                },
-                body: formData // Send the form data
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show a success pop-up
-                    alert(data.message); // Example: "Patient assigned to Dr. Alice Johnson"
-                    location.reload(); // Refresh the page after assignment
-                } else {
-                    // Show an error pop-up
-                    alert(data.error || "An error occurred while assigning the patient.");
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("An unexpected error occurred. Please try again.");
-            });
-        }
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value,
+                    },
+                    body: formData // Send the form data
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+
+                            alert(data.message);
+                            location.reload();
+                        } else {
+                            alert(data.error || "An error occurred while assigning the patient.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        alert("An unexpected error occurred. Please try again.");
+                    });
+            }
+        });
     });
-});
 
 
     document.querySelectorAll('form[action*="clear_patient"]').forEach(form => {
-    form.addEventListener('submit', function(event) {
-        event.preventDefault();
-        const confirmClear = confirm("Are you sure you want to clear this patient?");
-        if (confirmClear) {
-            fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                }
-            })
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const confirmClear = confirm("Are you sure you want to clear this patient?");
+            if (confirmClear) {
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload();
+                        } else {
+                            alert(data.error);
+                        }
+                    })
+                    .catch(error => {
+                        alert("An error occurred while clearing the patient.");
+                    });
+            }
+        });
+    });
+
+    document.querySelectorAll('button[data-action="delete-patient"]').forEach(button => {
+        button.addEventListener('click', function (event) {
+            const queueNumber = button.getAttribute('data-queue-number');
+            const confirmDelete = confirm(`Are you sure you want to delete the patient in queue ${queueNumber}?`);
+
+            if (confirmDelete) {
+                fetch(button.closest('form').action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value,
+                    },
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Success pop-up
+                            alert(data.message);
+                            location.reload();
+                            // Error pop-up
+                            alert(data.error || "An error occurred while deleting the patient.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        alert("An unexpected error occurred. Please try again.");
+                    });
+            }
+        });
+    });
+
+    function updatePatientList() {
+        fetch('/api/get-patient-list/')
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    location.reload();
-                } else {
-                    alert(data.error);
-                }
-            })
-            .catch(error => {
-                alert("An error occurred while clearing the patient.");
-            });
-        }
-    });
-});
+                const patientList = JSON.parse(data.patients);
+                const patientTable = document.getElementById('patient-list');
 
-document.querySelectorAll('button[data-action="delete-patient"]').forEach(button => {
-    button.addEventListener('click', function(event) {
-        const queueNumber = button.getAttribute('data-queue-number'); // Fetch queue number from button attribute
-        const confirmDelete = confirm(`Are you sure you want to delete the patient in queue ${queueNumber}?`);
 
-        if (confirmDelete) {
-            fetch(button.closest('form').action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value,
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Success pop-up
-                    alert(data.message); // Example: "Patient deleted successfully."
-                    location.reload(); // Refresh the page after deletion
-                } else {
-                    // Error pop-up
-                    alert(data.error || "An error occurred while deleting the patient.");
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("An unexpected error occurred. Please try again.");
-            });
-        }
-    });
-});
+                patientTable.innerHTML = '';
 
-function updatePatientList() {
-    fetch('/api/get-patient-list/')
-        .then(response => response.json())
-        .then(data => {
-            const patientList = JSON.parse(data.patients); // Parse the JSON data
-            const patientTable = document.getElementById('patient-list'); // Assuming you have a table or list
 
-            // Clear the existing table rows
-            patientTable.innerHTML = '';
-
-            // Populate the table with updated patient data
-            patientList.forEach(patient => {
-                const row = `
+                patientList.forEach(patient => {
+                    const row = `
                     <tr>
                         <td>${patient.fields.name}</td>
                         <td>${patient.fields.queue_number}</td>
@@ -369,49 +389,49 @@ function updatePatientList() {
                             </button>
                         </td>
                     </tr>`;
-                patientTable.innerHTML += row;
-            });
-
-            // Reinitialize the delete functionality for new buttons
-            initializeDeleteButtons();
-        })
-        .catch(error => console.error('Error fetching patient list:', error));
-}
-
-// Reinitialize delete buttons for dynamically loaded rows
-function initializeDeleteButtons() {
-    document.querySelectorAll('button[data-action="delete-patient"]').forEach(button => {
-        button.addEventListener('click', function(event) {
-            const queueNumber = button.getAttribute('data-queue-number');
-            const confirmDelete = confirm(`Are you sure you want to delete the patient in queue ${queueNumber}?`);
-
-            if (confirmDelete) {
-                fetch(`/assign-patient/${queueNumber}/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value,
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message);
-                        updatePatientList(); // Refresh the patient list
-                    } else {
-                        alert(data.error || "An error occurred while deleting the patient.");
-                    }
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-                    alert("An unexpected error occurred. Please try again.");
+                    patientTable.innerHTML += row;
                 });
-            }
-        });
-    });
-}
 
-// Call this function on page load to initialize delete buttons
-document.addEventListener('DOMContentLoaded', initializeDeleteButtons);
+
+                initializeDeleteButtons();
+            })
+            .catch(error => console.error('Error fetching patient list:', error));
+    }
+
+    // Reinitialize delete buttons for dynamically loaded rows
+    function initializeDeleteButtons() {
+        document.querySelectorAll('button[data-action="delete-patient"]').forEach(button => {
+            button.addEventListener('click', function (event) {
+                const queueNumber = button.getAttribute('data-queue-number');
+                const confirmDelete = confirm(`Are you sure you want to delete the patient in queue ${queueNumber}?`);
+
+                if (confirmDelete) {
+                    fetch(`/assign-patient/${queueNumber}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value,
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert(data.message);
+                                updatePatientList();
+                            } else {
+                                alert(data.error || "An error occurred while deleting the patient.");
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            alert("An unexpected error occurred. Please try again.");
+                        });
+                }
+            });
+        });
+    }
+
+
+    document.addEventListener('DOMContentLoaded', initializeDeleteButtons);
 
 
 </script>

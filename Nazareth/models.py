@@ -1,9 +1,10 @@
 from django.db import models
+from django.conf import settings
+from django.contrib import admin
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.timezone import now
 from django.db.models import Max
 import logging
-
 
 
 class CustomUserManager(BaseUserManager):
@@ -15,21 +16,21 @@ class CustomUserManager(BaseUserManager):
 
         email = self.normalize_email(email)
         user = self.model(username=username, email=email, **extra_fields)
-        user.set_password(password)  # Hash the password
+        user.set_password(password)
         user.save(using=self._db)
         return user
 
     def create_superuser(self, username, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('role', 'admin')  # Set superuser role to admin by default
+        extra_fields.setdefault('role', 'admin')
 
         if extra_fields.get('role') != 'admin':
             raise ValueError('Superuser must have role set to "admin".')
 
         return self.create_user(username, email, password, **extra_fields)
 
-# Custom User Model
+
 class CustomUser(AbstractUser):
     password = models.CharField(max_length=128)
     ROLE_CHOICES = [
@@ -40,12 +41,13 @@ class CustomUser(AbstractUser):
     ]
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='patient')
 
-    objects = CustomUserManager()  # Attach custom manager
+    objects = CustomUserManager()
 
     def __str__(self):
         return self.username
 
-# Department model
+
+
 class Department(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100, unique=True)
@@ -66,16 +68,12 @@ class Doctor(models.Model):
 
     def __str__(self):
         return f"Dr. {self.name} ({self.department.name if self.department else 'N/A'})"
+
     class Meta:
         ordering = ['name']
 
 
-
-
-
 logger = logging.getLogger(__name__)
-
-# Patient Model
 class Patient(models.Model):
     assigned_doctor = models.ForeignKey(
         'Doctor',
@@ -110,12 +108,11 @@ class Patient(models.Model):
         blank=True,
         related_name="patients"
     )
-    in_queue = models.BooleanField(default=False)  # Default to not being in queue
+    in_queue = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     queue_number = models.IntegerField(null=True, blank=True)
     date_registered = models.DateTimeField(default=now)
     phone_number = models.CharField(max_length=20)
-    temp_password = models.CharField(max_length=50, null=True, blank=True)
     status = models.CharField(
         max_length=20,
         choices=[
@@ -131,7 +128,7 @@ class Patient(models.Model):
     hidden = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        # Queue number assignment should only happen for valid patients in queue
+
         if self.in_queue and self.queue_number is None:
             max_queue_number = Patient.objects.aggregate(Max('queue_number'))['queue_number__max']
             self.queue_number = (max_queue_number or 0) + 1
@@ -149,7 +146,6 @@ class Patient(models.Model):
 
     class Meta:
         ordering = ['queue_number']
-
 
 
 class PatientRecord(models.Model):
@@ -174,18 +170,17 @@ class PatientRecord(models.Model):
             ("high", "High"),
         ],
         null=False,
-        blank=False  # Ensure priority is mandatory
+        blank=False
     )
     department = models.ForeignKey(
         Department,
-        on_delete=models.CASCADE,  # Ensure a department is always linked
+        on_delete=models.CASCADE,
         related_name="patient_records"
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.patient.name} - {self.service} - {self.priority.capitalize()} Priority - {self.department.name}"
-
 
 
 class Queue(models.Model):
@@ -214,11 +209,10 @@ class Queue(models.Model):
         ],
         default='in_queue'
     )
-    priority = models.IntegerField(choices=PRIORITY_CHOICES, default=2)  # Default is Medium
+    priority = models.IntegerField(choices=PRIORITY_CHOICES, default=2)
 
     def __str__(self):
         return f"{self.department.name if self.department else 'No Department'} - {self.service_type} - {self.get_priority_display()}"
-
 
 
 class Payment(models.Model):
@@ -227,8 +221,8 @@ class Payment(models.Model):
         on_delete=models.CASCADE,
         related_name="payments"
     )
-    services = models.TextField()  # List of services paid for
-    amount = models.DecimalField(max_digits=10, decimal_places=2)  # Total payment amount
+    services = models.TextField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_method = models.CharField(
         max_length=20,
         choices=[('cash', 'Cash'), ('card', 'Card'), ('insurance', 'Insurance')]
@@ -237,3 +231,39 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Payment by {self.patient.name} - {self.amount} KES"
+
+
+class QueueAdmin(admin.ModelAdmin):
+    list_display = ('department', 'service_type', 'status', 'priority', 'patients_display')
+
+    def patients_display(self, obj):
+        return ", ".join([patient.name for patient in obj.patients.all()])
+
+    patients_display.short_description = 'Patients'
+
+
+admin.site.register(Queue, QueueAdmin)
+
+
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ('patient', 'amount', 'payment_method', 'payment_date')
+
+
+admin.site.register(Payment, PaymentAdmin)
+
+
+class Appointment(models.Model):
+    patient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        default=1
+    )
+
+    contact_phone = models.CharField(max_length=20, null=True, blank=True)
+    contact_email = models.EmailField(null=True, blank=True)
+    date = models.DateTimeField()
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
+    reason = models.TextField()
+
+    def __str__(self):
+        return f"Appointment with {self.doctor.name} on {self.date} for {self.patient.username}"
