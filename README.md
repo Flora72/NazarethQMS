@@ -64,7 +64,7 @@ NazarethQMS/
    ```
 
 ## Implemented Modules
-- User authentication and role management Secure login system with differentiated access for admins, staff, and patients.
+- User authentication and role management Secure login system with differentiated access for admins, receptionist, and patients.
 - Quality metrics dashboard Real-time insights into hospital performance, queue efficiency, and service ratings.
 - RESTful APIs for integration Seamless communication with external systems and mobile platforms.
 - Unit and integration tests Automated testing to ensure reliability and maintainability.
