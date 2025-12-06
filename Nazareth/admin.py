@@ -6,7 +6,7 @@ from django.urls import path
 from .views import report_view, generate_full_report
 
 
-@admin.action(description="Generate CSV Report")
+
 def generate_csv_report(modeladmin, request, queryset):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{modeladmin.model._meta.model_name}_report.csv"'
