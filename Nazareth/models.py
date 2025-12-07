@@ -40,8 +40,7 @@ class CustomUser(AbstractUser):
         ('patient', 'Patient'),
     ]
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='patient')
-    phone_number = models.CharField(max_length=15, blank=True, null=True)
-
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
     objects = CustomUserManager()
 
     def __str__(self):
