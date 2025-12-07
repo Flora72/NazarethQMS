@@ -38,7 +38,6 @@ def index(request):
 
 
 logger = logging.getLogger(__name__)
-
 def signup_view(request):
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
@@ -49,6 +48,7 @@ def signup_view(request):
 
         logger.debug(f"Captured Form Data - Username: {username}, Email: {email}, Role: {role}, Phone: {phone_number}")
 
+        # Validate required fields
         if not all([username, email, role, password, phone_number]):
             messages.error(request, "All fields are required, including phone number.")
             return render(request, 'signup.html', {
@@ -57,6 +57,7 @@ def signup_view(request):
                 'role': role,
             })
 
+        # Validate phone number format
         try:
             phone_number = format_phone_number(phone_number)
         except ValueError as e:
@@ -68,23 +69,25 @@ def signup_view(request):
                 'role': role,
             })
 
+        # Prevent duplicate usernames
         if CustomUser.objects.filter(username=username).exists():
             messages.error(request, f"Username '{username}' is already taken. Please choose a different username.")
             return render(request, 'signup.html')
 
         try:
-
+            # Create the user
             user = CustomUser.objects.create(
                 username=username,
                 email=email,
                 role=role,
+                phone_number=phone_number
             )
             user.set_password(password)
             user.save()
 
+            # If patient role, create or update patient record
             if role == 'patient':
                 with transaction.atomic():
-
                     existing_patient = Patient.objects.filter(name=username, phone_number=phone_number).first()
 
                     if existing_patient:
@@ -93,17 +96,14 @@ def signup_view(request):
                         existing_patient.save()
                         logger.info(f"Updated Patient: {existing_patient.name}, Queue Position: {existing_patient.queue_number}")
                     else:
-
-                        new_queue_number = get_next_queue_number()
-
-                        Patient.objects.create(
+                        patient = Patient.objects.create(
                             name=username,
                             phone_number=phone_number,
-                            queue_number=new_queue_number,
                             in_queue=True,
                             hidden=False,
                         )
-                        logger.info(f"New Patient Created: {username}, Queue Position: {new_queue_number}")
+                        # queue_number will be auto-assigned in Patient.save()
+                        logger.info(f"New Patient Created: {patient.name}, Queue Position: {patient.queue_number}")
 
             messages.success(request, "Account created successfully! You can now log in.")
             return redirect('login')
@@ -114,6 +114,7 @@ def signup_view(request):
             return render(request, 'signup.html', {'username': username, 'email': email, 'role': role})
 
     return render(request, 'signup.html')
+
 
 
 
