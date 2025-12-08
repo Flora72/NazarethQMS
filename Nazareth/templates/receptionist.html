@@ -6,9 +6,192 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous" />
-    <link rel="stylesheet" href="{% static 'css/receptionist.css' %}">
-    <link rel="icon" type="image/png" href="{% static 'images/favicon.jpg' %}">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
     <title>Receptionist Dashboard</title>
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url("{% static 'images/background.png' %}");
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background: linear-gradient(to right, #00c6ff, #007a5e);
+            color: white;
+            position: fixed;
+        }
+
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .sidebar ul li:first-child {
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar ul li a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar ul li a i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        .sidebar-divider {
+            border: none;
+            height: 1px;
+            background-color: rgba(255, 255, 255, 0.5);
+            margin: 10px 0;
+        }
+
+        .main {
+            margin-left: 270px;
+            padding: 50px;
+        }
+
+        #dashboard {
+            margin-bottom: 30px;
+        }
+
+        #dashboard h2 {
+            font-size: 24px;
+            margin: 0;
+            color: white;
+        }
+
+        #dashboard p {
+            color: white;
+        }
+
+        .cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .card {
+            background: linear-gradient(to right, #00c6ff, #007a5e);
+            border-radius: 10px;
+            padding: 20px;
+            width: 200px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card-content .number {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .icon-box {
+            font-size: 30px;
+            margin-top: 10px;
+        }
+
+        .quick-actions {
+            margin-left: 270px;
+            padding: 50px;
+        }
+
+        .quick-actions h2 {
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        @media(max-width: 860px) {
+            .cards {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .card {
+                width: 90%;
+            }
+
+            .main {
+                padding: 20px;
+            }
+        }
+
+        @media(max-width: 530px) {
+            .sidebar {
+                width: 200px;
+            }
+
+            .main {
+                margin-left: 220px;
+            }
+        }
+
+        @media(max-width: 420px) {
+            .cards, .main {
+                padding: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
 <div class="container">
@@ -45,7 +228,6 @@
                     <div class="title">Payments</div>
                 </a>
             </li>
-
             <li>
                 <a href="{% url 'logout_view' %}">
                     <i class="fas fa-sign-out-alt"></i>
