@@ -11,6 +11,27 @@
           integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous"/>
     <title>Patient Dashboard</title>
     <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url("{% static 'images/background.png' %}");
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            color: white;
+        }
+
+        .sidebar {
+            background: linear-gradient(to right, #00c6ff, #007a5e);
+        }
+
+        .card {
+            background: linear-gradient(to right, #00c6ff, #007a5e);
+        }
 
         .loading {
             display: none;
@@ -34,7 +55,7 @@
         }
 
         .btn {
-            background-color: #007bff;
+            background: linear-gradient(to right, #00c6ff, #007a5e);
             color: white;
             padding: 10px 20px;
             border-radius: 5px;
@@ -67,7 +88,7 @@
         }
 
         .modal-content {
-            background: linear-gradient(blue, deepskyblue);
+            background: linear-gradient(to right, #00c6ff, #007a5e);
             color: white;
             border-radius: 10px;
             padding: 20px;
@@ -185,7 +206,7 @@
         <div class="top-bar">
             <div class="welcome-msg">
                 <h2>Hello, {{ name }}! 👋🏽</h2>
-                <p>Your current queue position is: <span
+                <p style="color:black ; font-weight: bold">Your current queue position is: <span
                         id="queuePosition">{{ queue_number|default:"Loading..." }}</span></p>
             </div>
             <div class="user">
@@ -289,7 +310,7 @@
         </div>
 
         <div class="quick-actions">
-            <h2>Quick Actions</h2>
+            <h2 style=" font-weight: bold">Quick Actions</h2>
             <div class="buttons">
                 <a href="#" class="btn" id="bookAppointment"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
                 <a href="#" class="btn" id="contactDoctor"><i class="fas fa-envelope"></i> Contact Doctor</a>
@@ -354,25 +375,25 @@
 <div class="loading" id="loadingIndicator">Loading queue position...</div>
 
 <script>
-   document.addEventListener('DOMContentLoaded', function () {
-    const queuePositionElement = document.getElementById('queuePosition');
+    document.addEventListener('DOMContentLoaded', function () {
+        const queuePositionElement = document.getElementById('queuePosition');
 
-    function fetchQueuePosition() {
-        const patientName = "{{ name }}";
-        fetch(`/get_queue_position/?name=${patientName}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.queue_position) {
-                    queuePositionElement.textContent = data.queue_position;
-                } else {
-                    queuePositionElement.textContent = "N/A";
-                    console.error(data.error || "Error fetching queue position");
-                }
-            })
-            .catch(error => console.error("Error fetching queue position:", error));
-    }
+        function fetchQueuePosition() {
+            const patientName = "{{ name }}";
+            fetch(`/get_queue_position/?name=${patientName}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.queue_position) {
+                        queuePositionElement.textContent = data.queue_position;
+                    } else {
+                        queuePositionElement.textContent = "N/A";
+                        console.error(data.error || "Error fetching queue position");
+                    }
+                })
+                .catch(error => console.error("Error fetching queue position:", error));
+        }
 
-    fetchQueuePosition();
+        fetchQueuePosition();
 
         setInterval(fetchQueuePosition, 60000);
 
@@ -391,7 +412,6 @@
                 targetSection.style.display = 'block';
             });
         });
-
 
 
         // Book Appointment Modal
