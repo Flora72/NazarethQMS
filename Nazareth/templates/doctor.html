@@ -23,6 +23,49 @@
             background-size: cover;
             color: white;
         }
+         .sidebar {
+            width: 250px;
+            height: 100vh;
+            background: linear-gradient(to right, #00c6ff, #007a5e);
+            color: white;
+            position: fixed;
+        }
+
+         .card {
+            background: linear-gradient(to right, #00c6ff, #007a5e);
+            border-radius: 10px;
+            padding: 20px;
+            width: 200px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+         .btn {
+            background: linear-gradient(to right, #00c6ff, #007a5e);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .btn i {
+            font-size: 18px;
+        }
+
+
+
     </style>
 </head>
 <body>
@@ -120,7 +163,7 @@
             </div>
 
             <div class="quick-actions">
-                <h2>Quick Actions</h2>
+                <h2 style=" font-weight: bold">Quick Actions</h2>
                 <div class="buttons">
                     <a href="#" class="btn"><i class="fas fa-user-plus"></i> Add Patient</a>
                     <a href="#" class="btn"><i class="fas fa-calendar-plus"></i> Schedule Appointment</a>
