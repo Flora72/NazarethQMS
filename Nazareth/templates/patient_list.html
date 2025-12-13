@@ -8,9 +8,22 @@
     <link rel="icon" type="image/png" href="{% static 'images/favicon.jpg' %}">
     <title>Patient List</title>
     <style>
+         html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url("{% static 'images/background.png' %}");
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
 
         .navbar {
-            background: linear-gradient(blue, deepskyblue);
+            background: linear-gradient(to right, #00c6ff, #007a5e);
             padding: 15px;
             color: white;
             display: flex;
